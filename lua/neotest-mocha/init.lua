@@ -14,6 +14,7 @@ local util = require "neotest-mocha.util"
 ---@field env? table<string, string>|fun(): table<string, string>
 ---@field cwd? string|fun(): string
 ---@field is_test_file? fun(path:string): boolean
+---@field map_to_local? fun(path:string): string
 
 ---@type fun(path:string):string
 local get_mocha_command = util.get_mocha_command
@@ -26,6 +27,9 @@ local get_env = util.get_env
 
 ---@type fun(path:string):string|nil
 local get_cwd = util.get_cwd
+
+---@type fun(path:string):string
+local map_to_local = nil
 
 ---@type neotest.Adapter
 local Adapter = { name = "neotest-mocha" }
@@ -238,7 +242,7 @@ function Adapter.results(spec, result, tree)
     return {}
   end
 
-  local results = util.parsed_json_to_results(parsed, tree, result.output)
+  local results = util.parsed_json_to_results(parsed, tree, result.output, map_to_local)
 
   return results
 end
@@ -285,6 +289,12 @@ setmetatable(Adapter, {
         return opts.cwd
       end
     end
+
+    if is_callable(opts.map_to_local) then
+      ---@diagnostic disable-next-line: cast-local-type
+      map_to_local = opts.map_to_local
+    end
+
     return Adapter
   end,
 })

@@ -292,11 +292,16 @@ end
 ---@param data table
 ---@param tree neotest.Tree
 ---@param consoleOut string
+---@param map_to_local fun(path:string):string
 ---@return table<string, neotest.Result>
-function M.parsed_json_to_results(data, tree, consoleOut)
+function M.parsed_json_to_results(data, tree, consoleOut, map_to_local)
   local tests = {}
 
   for _, test in pairs(data.tests) do
+    if map_to_local ~= nil then
+      test.file = map_to_local(test.file)
+    end
+
     local testKey = test.file .. " " .. test.fullTitle
     local name = test.title
     local status
