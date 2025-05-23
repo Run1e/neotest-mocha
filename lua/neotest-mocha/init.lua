@@ -15,6 +15,7 @@ local util = require "neotest-mocha.util"
 ---@field cwd? string|fun(): string
 ---@field is_test_file? fun(path:string): boolean
 ---@field map_to_local? fun(path:string): string
+---@field dir_filter? fun(path:string): boolean
 
 ---@type fun(path:string):string
 local get_mocha_command = util.get_mocha_command
@@ -30,6 +31,9 @@ local get_cwd = util.get_cwd
 
 ---@type fun(path:string):string
 local map_to_local = nil
+---
+---@type fun(path:string):boolean
+local dir_filter = nil
 
 ---@type neotest.Adapter
 local Adapter = { name = "neotest-mocha" }
@@ -72,7 +76,10 @@ end
 ---@param root string Root directory of project
 ---@return boolean
 function Adapter.filter_dir(name)
-  return name ~= "node_modules"
+  if dir_filter ~= nil then
+    return dir_filter(name)
+  end
+  return true
 end
 
 ---@param s string
@@ -293,6 +300,11 @@ setmetatable(Adapter, {
     if is_callable(opts.map_to_local) then
       ---@diagnostic disable-next-line: cast-local-type
       map_to_local = opts.map_to_local
+    end
+
+    if is_callable(opts.dir_filter) then
+      ---@diagnostic disable-next-line: cast-local-type
+      dir_filter = opts.dir_filter
     end
 
     return Adapter
